@@ -1,3 +1,5 @@
+#pragma once
+
 // VST3 SDKのインクルードファイル
 #include "public.sdk/source/main/pluginfactoryvst3.h"
 
@@ -22,8 +24,10 @@
 #define MYVST_VERSION  "0" 
 
 // 自作するVSTのカテゴリ。終端文字「\0」含めて64文字まで。
+/*
 #define MYVST_SUBCATEGORIES Vst::PlugType::kFx
-
+*/
+#define MYVST_SUBCATEGORIES Vst::PlugType::kInstrument
 
 // ===================================================================================
 // DLLファイルの初期化、終了処理関数
