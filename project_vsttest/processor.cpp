@@ -20,6 +20,8 @@ MyVSTProcessor::MyVSTProcessor()
 	setControllerClass(ControllerUID);
 }
 
+
+
 // ===================================================================================
 // クラスを初期化する関数
 // ===================================================================================
@@ -43,9 +45,11 @@ tresult PLUGIN_API MyVSTProcessor::initialize(FUnknown* context) {
 		freq = 5.0f;
 		type = 0;
 		*/
-		
+		mt.seed(rnd());
+		randPhase = std::uniform_real_distribution<float>(0.0f, 1.0f);
+
 		detune1 = 0.0f;
-		gain1 = 0.0f;
+		gain1 = 1.0f;
 		octave1 = 0;
 		volume = 0.0f;
 
@@ -123,13 +127,13 @@ tresult PLUGIN_API MyVSTProcessor::process(ProcessData& data){
 					*/
 					case PARAM_OSC1_OCTAVE_TAG:
 						// octave1を変更する
-						octave1 = (int32)(value * 6.0f);
+						octave1 = (int)(value * 6.0f) - 3;
 						break;
 
 					case PARAM_OSC1_DETUNE_TAG:
 						// detune1を変更する
-						// 0～100に線形変換
-						detune1 = value * 100.0f;
+						// 0～200に線形変換
+						detune1 = value * 200.0f;
 						break;
 
 					case PARAM_OSC1_GAIN_TAG:
@@ -200,21 +204,24 @@ tresult PLUGIN_API MyVSTProcessor::process(ProcessData& data){
 	for (int i = 0; i < noteList.size(); i++) {
 		// ノートナンバーとオクターブから中心周波数を計算する
 		int note = noteList[i];
-		float pitch = (440.0f * powf(2.0f, (float)(note - 69) / 12.0f) + (float)octave1);
-		float factorMax = 1.0f + (0.01f / 12.00f) * detune1;
-		float factorMin = 1.0f - (0.01f / 12.00f) * detune1;
+		float pitch = 440.0f * powf(2.0f, (float)(note - 69) / 12.0f + (float)octave1);
+		float factorMax = (0.01f / 12.00f) * detune1;
+		float factorMin = - (0.01f / 12.00f) * detune1;
 		std::vector<float> subList(DETUNE_NUM);
 		for (int j = 0; j < DETUNE_NUM; j++) {
 			// detuneされた周波数を計算する
 			// 倍率を和音の構成音ごとに求めていて無駄なので改善の余地有り
 			float detunedPitch = pitch * powf(2.0f,
-				(factorMax * ((float)j) + factorMin * (float)(DETUNE_NUM-1-j)) / (float)(DETUNE_NUM-1));
-			subList.push_back(detunedPitch);
+				(factorMax * (float)j + factorMin * (float)(DETUNE_NUM-1-j)) 
+				/ (float)(DETUNE_NUM-1));
+			subList[j] = detunedPitch;
+			// debug
+			// debugFlag = (int)detunedPitch;
 		}
 		pitchList.push_back(subList);
 
 		// debug
-		debugFlag = int(pitch);
+		//debugFlag = int(pitch);
 	}
 
 	// numSamplesで示されるサンプル分、音声を処理する
@@ -266,13 +273,14 @@ tresult PLUGIN_API MyVSTProcessor::process(ProcessData& data){
 		outL[i] = 0.0f;
 		outR[i] = 0.0f;
 
-		thetaDebug += 500.0f * (float)octave1 / 44100.0f;
+		/*
+		thetaDebug += (500.0f + (float)debugFlag) / 44100.0f;
 		while (thetaDebug >= 1.0f) {
 			thetaDebug -= 1.0f;
 		}
 		outL[i] += (thetaDebug - 0.5f) * 0.3f;
 		outR[i] += (thetaDebug - 0.5f) * 0.3f;
-		
+		*/
 		// debug
 		
 		// 各音高について
@@ -283,12 +291,12 @@ tresult PLUGIN_API MyVSTProcessor::process(ProcessData& data){
 				while (theta1[j][k] >= 1.0f) {
 					theta1[j][k] -= 1.0f;
 				}
-				outL[i] += (theta1[j][k] - 0.5f) * 0.02f;
-				outR[i] += (theta1[j][k] - 0.5f) * 0.02f;
+				outL[i] += (theta1[j][k] - 0.5f) * 0.08f * gain1;
+				outR[i] += (theta1[j][k] - 0.5f) * 0.08f * gain1;
 			}
 			//debugFlag = 2;
 		}
-		
+
 		outL[i] *= volume;
 		outR[i] *= volume;
 		
@@ -325,7 +333,10 @@ void MyVSTProcessor::onNoteOn(int channel, int note, float velocity)
 	noteList.push_back(note);
 
 	// 位相テーブルを追加
-	std::vector<float> th(DETUNE_NUM, 0.5f);
+	std::vector<float> th(DETUNE_NUM);
+	for (int i = 0; i < DETUNE_NUM; i++) {
+		th[i] = randPhase(mt);  // 位相をランダムにしないとめっちゃうなる
+	}
 	theta1.push_back(th);
 
 }

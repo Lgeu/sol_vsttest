@@ -1,9 +1,13 @@
+#pragma once
+
 // VST3 SDKのインクルードファイル
 #include "public.sdk/source/vst/vstaudioeffect.h"
 #include "pluginterfaces/vst/ivstparameterchanges.h"
 #include "pluginterfaces/vst/ivstevents.h" // イベントバス利用時に必要
 
 #include "myvst3define.h"
+
+#include <random>
 
 // VST3作成に必要なの名前空間を使用
 namespace Steinberg {
@@ -24,6 +28,11 @@ protected:
 	std::vector<std::vector<float>> theta1;  // 各波の位相，[0,1)
 	float thetaDebug;
 	int debugFlag;
+
+	// 乱数生成関連
+	std::random_device rnd;
+	std::mt19937 mt;
+	std::uniform_real_distribution<float> randPhase;
 
 public:
 	// コンストラクタ

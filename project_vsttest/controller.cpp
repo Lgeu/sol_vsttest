@@ -41,11 +41,11 @@ tresult PLUGIN_API MyVSTController::initialize(FUnknown* context){
 		param101->setPrecision(0);
 		parameters.addParameter(param101);
 		// Detuneパラメータを追加
-		RangeParameter* param102 = new RangeParameter(STR16("Osc1 Detune"), PARAM_OSC1_DETUNE_TAG, STR16("cent"), 0.0f, 100.0f, 0.0f);
+		RangeParameter* param102 = new RangeParameter(STR16("Osc1 Detune"), PARAM_OSC1_DETUNE_TAG, STR16("cent"), 0.0f, 200.0f, 0.0f);
 		param102->setPrecision(1);
 		parameters.addParameter(param102);
 		// Gainパラメータを追加
-		RangeParameter* param103= new RangeParameter(STR16("Osc1 Gain"), PARAM_OSC1_GAIN_TAG, STR16(""), 0.0f, 1.0f, 0.0f);
+		RangeParameter* param103= new RangeParameter(STR16("Osc1 Gain"), PARAM_OSC1_GAIN_TAG, STR16(""), 0.0f, 1.0f, 1.0f);
 		param103->setPrecision(2);
 		parameters.addParameter(param103);
 
